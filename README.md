@@ -1,5 +1,50 @@
-# CarND-Controls-MPC
-Self-Driving Car Engineer Nanodegree Program
+# CarND-Controls-MPC 
+---
+### Introduction
+The Purpose of this project is to implement a Model predictive control to drive the car around the track. MPC generates actuator values for future predicted erros in a predefined horizon given by `(N * dt)` where `N` is Number of steps and `dt` is timestep.
+### Rubric Points
+---
+### The Model : 
+The model used is a kinematic model ignoring the tire forces, gavity and mass. 
+Model state consists of six variables.
+```
+x,y - vehicle position 
+v - velocity
+psi - yaw angle
+cte - cross tack error
+epsi - yaw error
+```
+The actuator outputs are:
+```
+delta - Steering angle
+a - Acceleration/Throttle
+```
+`Lf` is the distance between the car's center of mass and the front wheels. This is provided by Udacity's seed project.
+
+Update equations are given below:
+```
+x[t+1] = x[t] + v[t] * cos(psi[t]) * dt;
+y[t+1] = y[t] + v[t] * sin(psi[t]) * dt;
+psi[t+1] = psi[t] + v[t]/Lf * delta[t] * dt;
+v[t+1] = v[t] + a[t] * dt;
+cte[t+1] = (f(x[t]) - y[t]) + v[t] * sin(epsi[t]) * dt;
+epsi[t+1] = (psi[t] - psides[t]) + v[t]/Lf * delta[t] * dt;
+```
+### Timestep Length and Elapsed Duration (N & dt): 
+After experimenting with different values for `N` and `dt`, I finally settled with `N = 10` and `dt = 0.1`. Timestep higher than latency resulted in erratic behavior especially at sharp curves. Higher number of steps made the controller to run slow. 
+The other values tried are 20/0.08, 10/0.05, 15/0.05, 20/0.05, 10/0.02, 10/0.08, 10/1, and many more. 
+### Polynomial Fitting and MPC Preprocessing:
+The waypoints provided by the simulator are transformed into vehicle's coordinate system `(/src/main.cpp 59-66)`. This makes the process easy because now vehicle's x and y coordinates are at orgin.These transformed waypoints are used to fit a 3rd order polynomial. The obtained coefficients are used to alculate `cte` and `epsi`.
+### Model Predictive Control with Latency:
+To deal with latency, predicted state values are calculated`(/src/main.cpp 54-57)` by using the latency and these predicted state values are passed to MPC solver instead of the simulator provided raw values.
+```
+px = px + v * cos(psi) * 0.1;
+py = py + v * sin(psi) * 0.1;
+psi = psi + v/Lf * delta * 0.1;
+v = v + a * 0.1;
+```
+### The vehicle must successfully drive a lap around the track:
+The vehicle is able to successfully drive a lap around the track.
 
 ---
 
